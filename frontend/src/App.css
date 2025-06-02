@@ -1,0 +1,377 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+* {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+html, body {
+  /*background-color: #f5f5f5; /* Light gray background to make shadow more visible */
+}
+
+.gradient-bg {
+  background-color: #4b5ec8;
+}
+.appointment-details {
+  background-color: #e6f0fa;
+  border-radius: 8px;
+  padding: 12px;
+}
+.date-circle {
+  transition: transform 0.2s, background-color 0.2s;
+}
+.date-circle:hover {
+  transform: scale(1.1);
+  background-color: #dbeafe;
+  color: black;
+}
+.date-circle.selected {
+  background-color: #4b5ec8;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 0 8px rgba(147, 197, 253, 0.4); /* Reduced blur radius and opacity */
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+.error-shake {
+  border-color: #ef4444 !important;
+  animation: shake 0.6s;
+}
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+.calendar-icon-container {
+  position: relative;
+  display: inline-block;
+}
+.calendar-icon {
+  animation: pulse 2.5s ease-in-out infinite;
+}
+.checkmark {
+  width: 48px; /* Mobile */
+  height: 48px; /* Mobile */
+  border-radius: 50%;
+  display: block;
+  stroke-width: 2;
+  stroke: #4bb71b;
+  stroke-miterlimit: 10;
+  box-shadow: inset 0px 0px 0px #4bb71b;
+  animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+  margin: 0 auto 12px; /* Increased margin for mobile */
+}
+.checkmark__circle {
+ stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: #4bb71b;
+  fill: #fff;
+  animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+.checkmark__check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+@keyframes stroke {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes scale {
+  0%, 100% {
+    transform: none;
+  }
+  50% {
+    transform: scale3d(1.1, 1.1, 1);
+  }
+}
+@keyframes fill {
+  100% {
+    box-shadow: inset 0px 0px 0px 30px #4bb71b;
+  }
+}
+.info-box {
+  background-color: #f0f7ff;
+  border: 1px solid #d1e7ff;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: left;
+}
+.info-box .text-md {
+  font-size: 16px; /* Call Details, Your Information */
+}
+.modern-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+}
+.modern-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid transparent;
+  border-top: 4px solid #4caf50;
+  border-left: 4px solid #81c784;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.blurred {
+  filter: grayscale(100%) opacity(0.5);
+  transition: filter 0.3s ease, opacity 0.3s ease;
+}
+.appointment-box {
+  position: relative;
+  margin: 24px; /* Increased margin for more shadow space */
+}
+.appointment-box .bg-white {
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1); /* Reduced blur radius and opacity */
+}
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  text-align: center;
+  font-size: 0.875rem;
+}
+.calendar-grid > div {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+}
+.calendar-grid .weekday {
+  font-weight: 500;
+  color: #6b7280;
+}
+.calendar-grid .date {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  transition: transform 0.2s, background-color 0.2s, color 0.2s;
+  cursor: pointer;
+  position: relative;
+}
+.calendar-grid .date:hover {
+  transform: scale(1.1);
+  background-color: #dbeafe;
+  color: #000;
+}
+.calendar-grid .date.selected {
+  background-color: #4b5ec8;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 0 8px rgba(147, 199, 253, 0.4); /* Reduced blur radius and opacity */
+}
+.calendar-grid .date.today {
+  color: #4b5ec8;
+  font-weight: 600;
+}
+.calendar-grid .date.past {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+.bg-indigo-600 {
+  padding: 1rem 1.5rem; /* Original for mobile */
+  font-size: 20px; /* Smaller 30-Minute Discovery Call for mobile */
+}
+.bg-indigo-600 .text-sm {
+  margin-top: 0.25rem; /* Reduced gap for mobile */
+}
+.appointment-box .py-3 {
+  font-size: 14px; /* Smaller time selection text for mobile */
+}
+.py-3 {
+  font-size: 18px; /* Button text for mobile (overridden for time slots) */
+}
+.text-2xl {
+  font-size: 20px; /* Match 30-Minute Discovery Call for mobile */
+}
+.appointment-details .text-gray-600 {
+  font-size: 14px; /* Mobile */
+}
+.info-box .text-gray-600 {
+  font-size: 14px; /* Mobile */
+}
+
+/* Desktop-specific styles (min-width: 768px) */
+@media (min-width: 768px) {
+  .max-w-4xl {
+    max-width: 960px; /* Reduced to ensure shadow fits in viewport */
+    height: 500px;
+    margin: 0 auto;
+    padding: 24px; /* Increased padding for shadow space */
+  }
+  .appointment-box {
+    font-size: 16px; /* Smallest text (base for info text) */
+  }
+  .appointment-box .bg-indigo-600 {
+    padding: 1.62rem 2.43rem; /* 1.35x of 1.2rem, 1.8rem for taller heading */
+    font-size: 24px; /* 30-Minute Discovery Call */
+  }
+  .appointment-box .bg-indigo-600 .text-sm {
+    font-size: 16px; /* Info text */
+    margin-top: 0.3375rem; /* 1.35x of 0.25rem, reduced gap for desktop */
+  }
+  .calendar-grid {
+    gap: 2.7px; /* 1.35x of 2px */
+    font-size: 16px; /* Calendar numbers */
+  }
+  .calendar-grid > div {
+    width: 43.2px; /* 1.35x of 32px */
+    height: 43.2px; /* 1.35x of 32px */
+  }
+  .calendar-grid .date {
+    width: 43.2px; /* 1.35x of 32px */
+    height: 43.2px; /* 1.35x of 32px */
+    line-height: 43.2px; /* 1.35x of 32px */
+    font-size: 16px; /* Calendar numbers */
+  }
+  .calendar-grid .weekday {
+    font-size: 16px; /* Weekday labels (SSMTWTF) */
+  }
+  .p-6 {
+    padding: 2.025rem; /* 1.35x of 1.5rem */
+  }
+  .text-md {
+    font-size: 20px; /* Select Date, Select Time, etc. */
+  }
+  .info-box .text-md {
+    font-size: 16px; /* Call Details, Your Information */
+  }
+  .text-sm {
+    font-size: 16px; /* Info text (e.g., formatted date, form labels) */
+  }
+  .space-y-2 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.675rem; /* 1.35x of 0.5rem */
+  }
+  .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1.35rem; /* 1.35x of 1rem */
+  }
+  .py-3 {
+    padding-top: 0.945rem; /* 1.35x of 0.7rem, for time slot buttons */
+    padding-bottom: 0.945rem; /* 1.35x of 0.7rem, for time slot buttons */
+    font-size: 18px; /* Button text */
+  }
+  .appointment-box .bg-indigo-600 + div + div .py-3 {
+    padding-top: 0.54rem; /* 1.35x of 0.4rem, for CTA buttons */
+    padding-bottom: 0.54rem; /* 1.35x of 0.4rem, for CTA buttons */
+    font-size: 18px; /* Button text */
+  }
+  .px-4 {
+    padding-left: 1.35rem; /* 1.35x of 1rem */
+    padding-right: 1.35rem; /* 1.35x of 1rem */
+  }
+  .mt-4 {
+    margin-top: 1.35rem; /* 1.35x of 1rem */
+  }
+  .mt-6 {
+    margin-top: 2.025rem; /* 1.35x of 1.5rem */
+  }
+  .mb-4 {
+    margin-bottom: 1.35rem; /* 1.35x of 1rem */
+  }
+  .rounded-lg {
+    border-radius: 0.675rem; /* 1.35x of 0.5rem */
+  }
+  .calendar-icon {
+    width: 6.75rem; /* 1.35x of 5rem */
+    height: 6.75rem; /* 1.35x of 5rem */
+  }
+  .min-h-\[300px\] {
+    min-height: 405px; /* 1.35x of 300px */
+  }
+  .modern-spinner {
+    width: 54px; /* 1.35x of 40px */
+    height: 54px; /* 1.35x of 40px */
+    border-width: 5.4px; /* 1.35x of 4px */
+  }
+  .checkmark {
+    width: 64.8px; /* Desktop (1.35x of 48px) */
+    height: 64.8px; /* Desktop (1.35x of 48px) */
+    margin: 0 auto 16.2px; /* Increased margin for desktop */
+  }
+  .text-2xl {
+    font-size: 24px; /* Match 30-Minute Discovery Call for desktop */
+  }
+  .appointment-details {
+    padding: 1.35rem; /* 1.35x of 12px */
+    border-radius: 0.675rem; /* 1.35x of 8px */
+  }
+  .info-box {
+    padding: 2.025rem; /* 1.35x of 16px */
+    border-radius: 0.675rem; /* 1.35x of 8px */
+  }
+  .appointment-details .text-gray-600 {
+    font-size: 16px; /* Desktop */
+  }
+  .info-box .text-gray-600 {
+    font-size: 16px; /* Desktop */
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+    20%, 40%, 60%, 80% { transform: translateX(4px); }
+  }
+  .error-shake {
+    border-color: #ef4444 !important;
+    animation: shake 0.8s;
+  }
+}
+
+/* Inline widget embedding styles */
+.inline-embed,
+.inline-embed html,
+.inline-embed body {
+  background-color: transparent !important; /* Ensure no background color */
+}
+
+.inline-embed .appointment-box {
+  margin: 0; /* Remove margin to avoid extra space */
+  background: none !important; /* Ensure no background */
+}
+
+.inline-embed .appointment-box .bg-white {
+  box-shadow: none !important; /* Remove shadow */
+  background: none !important; /* Ensure no background */
+}
+
+.inline-embed .max-w-4xl {
+  background: none !important; /* Remove any background for desktop container */
+  padding: 0; /* Remove padding to avoid extra space */
+  box-shadow: none !important; /* Ensure no shadow */
+}
+
+.inline-embed .appointment-details,
+.inline-embed .info-box {
+  background: none !important; /* Remove backgrounds from appointment-details and info-box */
+  border: none !important; /* Remove borders for cleaner look */
+}
+
+/* Ensure calendar-grid remains unaffected */
+.inline-embed .calendar-grid {
+  background: none; /* No background for the calendar grid container */
+}

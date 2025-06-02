@@ -1,0 +1,213 @@
+/* Modernized Login.css with no scrollbars and 100vh */
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Fixed to full viewport height */
+  background: linear-gradient(135deg, #2c3e50, #3498db, #87cefa); /* Modern bluish gradient */
+  font-family: 'Inter', sans-serif;
+  margin: 0; /* Remove any default margins */
+  padding: 0; /* Remove padding to avoid hidden spaces */
+}
+
+.login-box {
+  background: #ffffff; /* White login box */
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1); /* Subtle border */
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(52, 152, 219, 0.2); /* Blue-tinted shadow */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(52, 152, 219, 0.3); /* Slightly darker blue shadow on hover */
+}
+
+.login-box h2 {
+  margin: 0 0 25px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #2c3e50; /* Dark navy blue for heading */
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.error-message {
+  color: #ff6b6b; /* Red for errors */
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  padding: 8px 12px;
+  background: rgba(255, 75, 75, 0.05); /* Lighter red background */
+  border-radius: 8px;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+}
+
+.login-box form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login-box label {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  font-weight: 600;
+  color: #2c3e50; /* Dark navy blue for labels */
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.input-container, .password-container {
+  position: relative;
+  width: 100%;
+}
+
+.input-wrapper, .password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.login-box input {
+  margin-top: 8px;
+  padding: 12px 16px;
+  padding-right: 36px; /* Adjust space for the 16px icon */
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #2c3e50; /* Dark navy blue for input text */
+  background: #e6f0fa; /* Light blue background for inputs */
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  width: 100%; /* Ensure full width within the wrapper */
+  box-sizing: border-box;
+}
+
+.login-box input:focus {
+  outline: none;
+  background: #ffffff; /* White on focus */
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3); /* Softer blue focus ring */
+  transform: scale(1.02);
+}
+
+.password-toggle-icon {
+  position: absolute;
+  right: 12px;
+  top: 58%; /* Slightly lower position */
+  transform: translateY(-50%);
+  color: #3498db; /* Medium blue for icon */
+  width: 16px; /* Smaller size */
+  height: 16px; /* Smaller size */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.password-toggle-icon:hover {
+  color: #2980b9; /* Darker blue on hover */
+}
+
+.save-password-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.save-password-container input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #3498db; /* Blue checkbox */
+}
+
+.save-password-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2c3e50; /* Dark navy blue for label */
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.login-btn {
+  background: linear-gradient(90deg, #2c3e50 0%, #3498db 100%); /* Navy to vibrant blue gradient */
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  width: 100%; /* Ensure button matches input width */
+}
+
+.login-btn:hover {
+  background: linear-gradient(90deg, #1a252f 0%, #2980b9 100%); /* Darker navy to medium blue */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3); /* Blue shadow on hover */
+}
+
+.login-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+}
+
+.login-logo {
+  width: 360px;
+  height: auto;
+  margin-bottom: 40px;
+  animation: logoFadeIn 1s ease-in-out;
+}
+
+@keyframes logoFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .login-box {
+    padding: 30px;
+    max-width: 90%;
+  }
+
+  .login-logo {
+    width: 120px;
+    margin-bottom: 30px;
+  }
+
+  .login-box h2 {
+    font-size: 24px;
+  }
+
+  .login-btn {
+    padding: 12px;
+    font-size: 14px;
+  }
+}
