@@ -8,13 +8,14 @@ module.exports = function override(config, env) {
     stream: require.resolve('stream-browserify'),
     buffer: require.resolve('buffer'),
     util: require.resolve('util'),
-    process: require.resolve('process/browser.js') 
+    process: require.resolve('process/browser.js')
+  };
 
   // Add necessary plugins
   config.plugins = [
     ...config.plugins,
     new webpack.ProvidePlugin({
-      process: 'process/browser.js', 
+      process: 'process/browser.js',
       Buffer: ['buffer', 'Buffer']
     }),
     new webpack.DefinePlugin({
