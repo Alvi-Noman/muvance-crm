@@ -6,6 +6,8 @@ import { Sidebar, Dashboard, LeadsManagement, Calendar, Settings, LeadDetailsMod
 import './App.css';
 import Login from './Login';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+
 const getGravatarUrl = (email) => {
   const safeEmail = email && email.trim() ? email.trim().toLowerCase() : 'default@example.com';
   const hash = md5(safeEmail).toString();
@@ -291,7 +293,7 @@ function App() {
       const token = localStorage.getItem('token');
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
-          const response = await axios.get('http://localhost:5000/api/appointments', {
+          const response = await axios.get(`${API_BASE_URL}/api/appointments`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           const appointments = response.data.map(appointment => {
@@ -358,7 +360,7 @@ function App() {
               errorMessage = 'Server error. Please check the backend logs for details.';
             }
           } else if (err.code === 'ECONNREFUSED') {
-            errorMessage = 'Cannot connect to backend. Ensure the server is running on http://localhost:5000.';
+            errorMessage = 'Cannot connect to backend. Please ensure the server is running.';
           }
           setFetchError(errorMessage);
           setLastLeadReceived('No leads received yet');
@@ -380,7 +382,7 @@ function App() {
       try {
         const formattedDate = selectedDate.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         console.log('Fetching booked times for date:', formattedDate);
-        const response = await axios.get('http://localhost:5000/api/appointments', {
+        const response = await axios.get(`${API_BASE_URL}/api/appointments`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const appointments = Array.isArray(response.data) ? response.data : [];
@@ -481,7 +483,7 @@ function App() {
         throw new Error('Lead not found');
       }
       const updatedActivity = [{ status: newStatus, timestamp }, ...lead.activity];
-      await axios.patch(`http://localhost:5000/api/appointments/${id}`, {
+      await axios.patch(`${API_BASE_URL}/api/appointments/${id}`, {
         status: newStatus,
         activity: updatedActivity
       }, {
@@ -506,7 +508,7 @@ function App() {
           data: error.response.data
         } : null
       });
-      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      if (error.response && (error.response.status === 401 || err.response.status === 403)) {
         handleLogout();
         return;
       }
@@ -517,7 +519,7 @@ function App() {
   const handleDeleteLead = async (id) => {
     const token = localStorage.getItem('token');
     try {
-      await axios.delete(`http://localhost:5000/api/appointments/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/appointments/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setLeads(leads.filter((lead) => lead.id !== id));
@@ -668,7 +670,7 @@ function App() {
       const newNote = selectedLead.currentNote.trim();
       const timestamp = new Date().toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
       const updatedActivity = [{ text: newNote, timestamp }, ...selectedLead.activity];
-      await axios.patch(`http://localhost:5000/api/appointments/${selectedLead.id}`, {
+      await axios.patch(`${API_BASE_URL}/api/appointments/${selectedLead.id}`, {
         latestNote: newNote,
         activity: updatedActivity
       }, {
@@ -728,7 +730,7 @@ function App() {
         const formattedAppointmentTime = selectedLead.newAppointmentTime;
         const timestamp = new Date().toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
         const updatedActivity = [{ text: `Appointment booked for ${selectedLead.newAppointmentDate} at ${formattedAppointmentTime}`, timestamp }, ...selectedLead.activity];
-        await axios.patch(`http://localhost:5000/api/appointments/${selectedLead.id}`, {
+        await axios.patch(`${API_BASE_URL}/api/appointments/${selectedLead.id}`, {
           date: formattedAppointmentDate,
           time: formattedAppointmentTime,
           activity: updatedActivity
@@ -783,7 +785,7 @@ function App() {
     try {
       const timestamp = new Date().toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
       const updatedActivity = [{ status: newStatus, timestamp }, ...selectedLead.activity];
-      await axios.patch(`http://localhost:5000/api/appointments/${selectedLead.id}`, {
+      await axios.patch(`${API_BASE_URL}/api/appointments/${selectedLead.id}`, {
         status: newStatus,
         activity: updatedActivity
       }, {
@@ -867,7 +869,7 @@ function App() {
       console.log('Submitting New Lead:', newLeadData);
 
       try {
-        const response = await axios.post('http://localhost:5000/api/appointments', newLeadData, {
+        const response = await axios.post(`${API_BASE_URL}/api/appointments`, newLeadData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const newAppointment = response.data.appointment;
@@ -888,51 +890,74 @@ function App() {
         };
         setLeads([...leads, newLeadEntry]);
         setDisplayedLeadsCount(prev => Math.min(prev + 1, filteredLeads.length + 1));
+        setHasMore(filteredLeads.length + 1 > leadsPerPage);
 
         const formattedDate = newLead.appointmentDate;
         setDateBookedTimes(prev => {
           const currentTimes = prev[formattedDate] || [];
-          const updatedTimes = [...currentTimes, formattedAppointmentTime];
+          const updatedTimes = currentTimes.includes(formattedAppointmentTime)
+            ? currentTimes
+            : [...currentTimes, formattedAppointmentTime];
           return {
             ...prev,
             [formattedDate]: updatedTimes
           };
         });
 
-        closeAddLeadModal();
+        setIsAddLeadOpen(false);
+        setNewLead({
+          name: '',
+          phone: '',
+          email: '',
+          website: '',
+          appointmentDate: '',
+          appointmentTime: ''
+        });
+        setSelectedDate(new Date('2025-05-21T15:23:00+06:00'));
         setActionError(null);
-      } catch (err) {
-        console.error('Error adding lead:', err);
-        if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+      } catch (error) {
+        console.error('Error adding new lead:', error);
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
           handleLogout();
           return;
         }
-        setActionError('Failed to add new lead. Please check your input or try again later.');
+        setActionError('Failed to add new lead. Please try again.');
       }
     } else {
-      setActionError('Please fill in all required fields: Name, Phone, Date, and Time.');
+      setActionError('Please fill in all required fields (Name, Phone, Appointment Date, and Time).');
     }
   };
 
-  const handleAddUser = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem('token');
-    try {
-      await axios.post('http://localhost:5000/api/settings/add-user', newUser, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setNewUser({ username: '', email: '', password: '' });
-      setIsSettingsOpen(false);
-      setActionError(null);
-      alert('User created successfully');
-    } catch (error) {
-      console.error('Error adding user:', error);
-      if (error.response && error.response.status === 403) {
-        setActionError('Admin access required to add users.');
-      } else {
-        setActionError('Failed to add user. Please try again.');
+  const handleAddUser = async () => {
+    if (newUser.username.trim() && newUser.email.trim() && newUser.password.trim()) {
+      const token = localStorage.getItem('token');
+      try {
+        await axios.post(`${API_BASE_URL}/api/settings/add-user`, {
+          username: newUser.username.trim(),
+          email: newUser.email.trim().toLowerCase(),
+          password: newUser.password.trim()
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setNewUser({ username: '', email: '', password: '' });
+        setActionError(null);
+        alert('User added successfully!');
+      } catch (error) {
+        console.error('Error adding user:', error);
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          handleLogout();
+          return;
+        }
+        setActionError(error.response?.data?.message || 'Failed to add user. Please try again.');
       }
+    } else {
+      setActionError('Please fill in all fields (Username, Email, Password).');
     }
+  };
+
+  const handleSettingsToggle = () => {
+    setIsSettingsOpen(true);
+    setActiveSection('Settings');
   };
 
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
@@ -943,92 +968,97 @@ function App() {
 
   return (
     <div className="App">
-      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
       <Sidebar
+        onSectionChange={handleSectionChange}
+        onLogout={handleLogout}
+        onSettingsToggle={handleSettingsToggle}
         activeSection={activeSection}
-        handleSectionChange={handleSectionChange}
-        handleLogout={handleLogout}
       />
-      <section className="main-section">
+      <div className="main-section">
         {activeSection === 'Dashboard' && (
           <Dashboard
             statusCounts={statusCounts}
+            onBlockClick={handleDashboardBlockClick}
+            lastLeadReceived={lastLeadReceived}
             dailyLeadData={dailyLeadData}
-            handleDashboardBlockClick={handleDashboardBlockClick}
           />
         )}
         {activeSection === 'Leads' && (
           <LeadsManagement
-            fetchError={fetchError}
-            actionError={actionError}
-            statusFilter={statusFilter}
-            currentLeads={currentLeads}
-            isInitialLoading={isInitialLoading}
-            searchQuery={searchQuery}
-            handleSearchChange={handleSearchChange}
-            suggestions={suggestions}
-            highlightedIndex={highlightedIndex}
-            handleSuggestionClick={handleSuggestionClick}
-            getSuggestionIcon={getSuggestionIcon}
-            filterOption={filterOption}
-            isFilterDropdownOpen={isFilterDropdownOpen}
-            toggleFilterDropdown={toggleFilterDropdown}
-            handleFilterSelect={handleFilterSelect}
-            openAddLeadModal={openAddLeadModal}
-            getStatusColor={getStatusColor}
+            leads={currentLeads}
             statusOptions={statusOptions}
             openStatusDropdownId={openStatusDropdownId}
             toggleStatusDropdown={toggleStatusDropdown}
             handleStatusSelect={handleStatusSelect}
             openDetails={openDetails}
-            hasMore={hasMore}
-            isLoading={isLoading}
-            filteredLeads={filteredLeads}
+            searchQuery={searchQuery}
+            handleSearchChange={handleSearchChange}
+            suggestions={suggestions}
+            handleSuggestionClick={handleSuggestionClick}
+            getSuggestionIcon={getSuggestionIcon}
+            highlightedIndex={highlightedIndex}
+            filterOption={filterOption}
+            toggleFilterDropdown={toggleFilterDropdown}
+            handleFilterSelect={handleFilterSelect}
+            isFilterDropdownOpen={isFilterDropdownOpen}
+            openAddLeadModal={openAddLeadModal}
             loadMoreRef={loadMoreRef}
+            isLoading={isLoading}
+            hasMore={hasMore}
+            isInitialLoading={isInitialLoading}
+            fetchError={fetchError}
+            actionError={actionError}
+            getStatusColor={getStatusColor}
             handleDeleteLead={handleDeleteLead}
           />
         )}
-        {activeSection === 'Calendar' && <Calendar />}
-        {activeSection === 'Settings' && (
+        {activeSection === 'Calendar' && (
+          <Calendar
+            leads={leads}
+            selectedDate={selectedDate}
+            handleDateChange={handleDateChange}
+            openDetails={openDetails}
+          />
+        )}
+        {activeSection === 'Settings' && isSettingsOpen && (
           <Settings
-            isSettingsOpen={isSettingsOpen}
-            setIsSettingsOpen={setIsSettingsOpen}
             newUser={newUser}
             setNewUser={setNewUser}
             handleAddUser={handleAddUser}
             actionError={actionError}
           />
         )}
-        <LeadDetailsModal
-          selectedLead={selectedLead}
-          closeDetails={closeDetails}
-          modalRef={modalRef}
-          getStatusColor={getStatusColor}
-          statusOptions={statusOptions}
-          updateStatus={updateStatus}
-          handleNoteChange={handleNoteChange}
-          addNote={addNote}
-          handleAppointmentChange={handleAppointmentChange}
-          selectedDate={selectedDate}
-          handleDateChange={handleDateChange}
-          timeOptions={reorderTimeOptions(timeOptions, selectedLead?.newAppointmentTime)}
-          updateAppointment={updateAppointment}
-          actionError={actionError}
-        />
-        <AddLeadModal
-          isAddLeadOpen={isAddLeadOpen}
-          closeAddLeadModal={closeAddLeadModal}
-          addLeadModalRef={addLeadModalRef}
-          newLead={newLead}
-          handleNewLeadChange={handleNewLeadChange}
-          selectedDate={selectedDate}
-          handleDateChange={handleDateChange}
-          timeOptions={timeOptions}
-          addNewLead={addNewLead}
-          actionError={actionError}
-        />
-      </section>
+        {selectedLead && (
+          <LeadDetailsModal
+            lead={selectedLead}
+            modalRef={modalRef}
+            closeDetails={closeDetails}
+            statusOptions={statusOptions}
+            updateStatus={updateStatus}
+            handleNoteChange={handleNoteChange}
+            addNote={addNote}
+            dateOptions={dateOptions}
+            timeOptions={reorderTimeOptions(timeOptions, selectedLead.newAppointmentTime)}
+            handleAppointmentChange={handleAppointmentChange}
+            updateAppointment={updateAppointment}
+            handleDeleteLead={handleDeleteLead}
+            getGravatarUrl={getGravatarUrl}
+            actionError={actionError}
+          />
+        )}
+        {isAddLeadOpen && (
+          <AddLeadModal
+            newLead={newLead}
+            handleNewLeadChange={handleNewLeadChange}
+            addNewLead={addNewLead}
+            closeAddLeadModal={closeAddLeadModal}
+            addLeadModalRef={addLeadModalRef}
+            dateOptions={dateOptions}
+            timeOptions={timeOptions}
+            actionError={actionError}
+          />
+        )}
+      </div>
     </div>
   );
 }

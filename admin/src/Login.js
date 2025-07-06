@@ -37,7 +37,9 @@ function Login({ onLogin }) {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/login', {
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://muvance-crm.onrender.com';
+      console.log('API Base URL:', API_BASE_URL); // Debug log to confirm URL
+      const response = await axios.post(`${API_BASE_URL}/api/login`, {
         identifier: credentials.identifier.trim(),
         password: credentials.password,
       });
@@ -68,8 +70,16 @@ function Login({ onLogin }) {
         }
       }
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Login failed. Please try again.';
-      console.error('Login error:', err.response || err); // Debug log
+      const errorMessage = err.response?.data?.message || 'Login failed. Please check your credentials or ensure the backend server is running.';
+      console.error('Login error:', {
+        message: err.message,
+        response: err.response ? {
+          status: err.response.status,
+          data: err.response.data,
+          headers: err.response.headers
+        } : null,
+        requestUrl: err.config?.url || 'Unknown URL'
+      }); // Enhanced debug log
       setError(errorMessage);
     }
   };
