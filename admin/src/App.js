@@ -6,7 +6,7 @@ import { Sidebar, Dashboard, LeadsManagement, Calendar, Settings, LeadDetailsMod
 import './App.css';
 import Login from './Login';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://muvance-crm.onrender.com';
 
 const getGravatarUrl = (email) => {
   const safeEmail = email && email.trim() ? email.trim().toLowerCase() : 'default@example.com';
@@ -336,15 +336,15 @@ function App() {
           setFetchError(null);
           setIsInitialLoading(false);
           return;
-        } catch (err) {
+        } catch (error) {
           console.error(`Fetch attempt ${attempt} failed:`, {
-            message: err.message,
-            response: err.response ? {
-              status: err.response.status,
-              data: err.response.data
+            message: error.message,
+            response: error.response ? {
+              status: error.response.status,
+              data: error.response.data
             } : null
           });
-          if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+          if (error.response && (error.response.status === 401 || error.response.status === 403)) {
             handleLogout();
             return;
           }
@@ -353,13 +353,13 @@ function App() {
             continue;
           }
           let errorMessage = 'Failed to fetch appointments. Please ensure the backend server is running and try again.';
-          if (err.response) {
-            if (err.response.status === 404) {
+          if (error.response) {
+            if (error.response.status === 404) {
               errorMessage = 'Appointments endpoint not found. Check if the backend is correctly set up.';
-            } else if (err.response.status === 500) {
+            } else if (error.response.status === 500) {
               errorMessage = 'Server error. Please check the backend logs for details.';
             }
-          } else if (err.code === 'ECONNREFUSED') {
+          } else if (error.code === 'ECONNREFUSED') {
             errorMessage = 'Cannot connect to backend. Please ensure the server is running.';
           }
           setFetchError(errorMessage);
@@ -399,15 +399,15 @@ function App() {
           [formattedDate]: times
         }));
         setFetchError(null);
-      } catch (err) {
+      } catch (error) {
         console.error('Error fetching booked times:', {
-          message: err.message,
-          response: err.response ? {
-            status: err.response.status,
-            data: err.response.data
+          message: error.message,
+          response: error.response ? {
+            status: error.response.status,
+            data: error.response.data
           } : null
         });
-        if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
           handleLogout();
           return;
         }
@@ -508,7 +508,7 @@ function App() {
           data: error.response.data
         } : null
       });
-      if (error.response && (error.response.status === 401 || err.response.status === 403)) {
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
         handleLogout();
         return;
       }
