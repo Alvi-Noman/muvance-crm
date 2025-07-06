@@ -1,5 +1,3 @@
-//balsal
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
@@ -37,7 +35,7 @@ const AppointmentBooking = () => {
 
   const fetchBookedTimes = async (selectedDate) => {
     try {
-      const response = await axios.get('http://localhost:5000/api/appointments');
+      const response = await axios.get('https://muvance-crm.onrender.com/api/appointments');
       console.log('API Response (fetchBookedTimes):', response.data);
       const selectedDateStr = new Date(currentYear, currentMonth, selectedDate).toISOString().split('T')[0];
       const booked = response.data
@@ -56,7 +54,7 @@ const AppointmentBooking = () => {
 
   const fetchFullyBookedDates = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/appointments');
+      const response = await axios.get('https://muvance-crm.onrender.com/api/appointments');
       console.log('API Response (fetchFullyBookedDates):', response.data);
       const appointments = response.data;
       const fullyBooked = [];
@@ -144,7 +142,7 @@ const AppointmentBooking = () => {
         websiteLink: formData.websiteLink,
         submissionDate,
       });
-      const response = await axios.post('http://localhost:5000/api/appointments', {
+      const response = await axios.post('https://muvance-crm.onrender.com/api/appointments', {
         date: appointmentDate,
         time: selectedTime,
         fullName: formData.fullName,
