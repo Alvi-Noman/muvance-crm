@@ -1,34 +1,27 @@
 const webpack = require('webpack');
 
 module.exports = function override(config, env) {
+  // Polyfill Node.js modules for browser compatibility
   config.resolve.fallback = {
     ...config.resolve.fallback,
     crypto: require.resolve('crypto-browserify'),
     stream: require.resolve('stream-browserify'),
-    process: require.resolve('process/browser.js'), // Explicitly specify .js extension
-    buffer: require.resolve('buffer/'),
-    util: require.resolve('util/'),
+    buffer: require.resolve('buffer'),
+    util: require.resolve('util'),
+    process: require.resolve('process/browser')
   };
 
+  // Add necessary plugins
   config.plugins = [
     ...config.plugins,
     new webpack.ProvidePlugin({
-      process: 'process/browser.js', // Updated to include .js
-      Buffer: ['buffer', 'Buffer'],
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer']
     }),
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      'process': '{}', // Provide a minimal process object to avoid undefined errors
-    }),
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
+    })
   ];
-
-  // Disable HMR if it causes issues (optional)
-  if (process.env.NODE_ENV === 'development') {
-    config.devServer = {
-      ...config.devServer,
-      hot: false, // Disable HMR temporarily to test
-    };
-  }
 
   return config;
 };
