@@ -3,7 +3,7 @@ import axios from 'axios';
 import './App.css';
 
 const AppointmentBooking = () => {
-  const today = new Date(); // Use current date and time dynamically
+  const today = new Date(); // Current date: July 8, 2025, 2:05 PM +06
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectedDate, setSelectedDate] = useState(today.getDate());
@@ -23,6 +23,8 @@ const AppointmentBooking = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [bookedTimes, setBookedTimes] = useState([]);
   const [fullyBookedDates, setFullyBookedDates] = useState([]);
+  const [smsStatus, setSmsStatus] = useState(null);
+  const [serverIp, setServerIp] = useState(null);
 
   const timeSlots = ["11:00 AM", "1:00 PM", "4:00 PM", "7:00 PM", "9:00 PM"];
 
@@ -106,7 +108,7 @@ const AppointmentBooking = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: value.trim(),
     }));
     setErrors((prev) => ({
       ...prev,
@@ -116,7 +118,7 @@ const AppointmentBooking = () => {
 
   const handleConfirmBooking = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^(?:\+?88)?\d{10}$/; // Accepts +8801712345678, 8801712345678, or 01712345678
+    const phoneRegex = /^(?:(?:\+88|88)?\d{11}|\d{11})$/;
     const newErrors = {
       fullName: !formData.fullName,
       phoneNumber: !formData.phoneNumber || !phoneRegex.test(formData.phoneNumber),
@@ -131,6 +133,7 @@ const AppointmentBooking = () => {
 
     setIsLoading(true);
     try {
+      console.log('Raw Phone Number:', formData.phoneNumber);
       const appointmentDate = new Date(currentYear, currentMonth, selectedDate).toLocaleDateString("en-US", {
         weekday: "long",
         month: "long",
@@ -148,7 +151,6 @@ const AppointmentBooking = () => {
         submissionDate,
       });
 
-      // Post appointment to CRM
       const appointmentResponse = await axios.post('https://muvance-crm.onrender.com/api/appointments', {
         date: new Date(currentYear, currentMonth, selectedDate).toISOString(),
         time: selectedTime,
@@ -160,42 +162,68 @@ const AppointmentBooking = () => {
       });
       console.log('Booking Response:', appointmentResponse.data);
 
-      // Format phone number for BulkSMSBD (ensure 880 prefix, no +)
       let formattedPhoneNumber = formData.phoneNumber;
       if (formattedPhoneNumber.startsWith('+88')) {
-        formattedPhoneNumber = formattedPhoneNumber.slice(1); // Remove + (e.g., +8801712345678 -> 8801712345678)
+        formattedPhoneNumber = formattedPhoneNumber.slice(1);
       } else if (!formattedPhoneNumber.startsWith('88')) {
-        formattedPhoneNumber = `88${formattedPhoneNumber}`; // Add 88 (e.g., 01712345678 -> 8801712345678)
+        formattedPhoneNumber = `88${formattedPhoneNumber}`;
       }
+      if (!/^88\d{11}$/.test(formattedPhoneNumber)) {
+        throw new Error('Invalid phone number format for SMS API');
+      }
+      console.log('Formatted Phone Number:', formattedPhoneNumber);
 
-      // Prepare SMS message (keep under 160 characters for text type)
       const smsMessage = `Dear ${formData.fullName}, your appointment is confirmed for ${appointmentDate} at ${selectedTime}. Thank you!`;
+      console.log('SMS Message (raw):', smsMessage);
       if (smsMessage.length > 160) {
         console.warn('SMS message exceeds 160 characters:', smsMessage.length);
-        throw new Error('SMS message too long. Please shorten it.');
+        throw new Error('SMS message too long');
       }
 
-      // URL encode the message to handle special characters
-      const encodedMessage = encodeURIComponent(smsMessage);
-
-      // Send SMS via BulkSMSBD API
+      console.log('Sending SMS to:', formattedPhoneNumber);
       const smsResponse = await axios.get('http://bulksmsbd.net/api/smsapi', {
         params: {
-          api_key: process.env.REACT_APP_BULKSMSBD_API_KEY, // uKlReGw9CJ1ZXEzzng2U
-          senderid: process.env.REACT_APP_BULKSMSBD_SENDERID, // uKlReGw9CJ1ZXEzzng2U
+          api_key: process.env.REACT_APP_BULKSMSBD_API_KEY,
+          senderid: process.env.REACT_APP_BULKSMSBD_SENDERID,
           number: formattedPhoneNumber,
-          message: encodedMessage,
-          type: 'text', // Use 'unicode' for Bangla messages
+          message: smsMessage,
+          type: 'text',
         },
       });
       console.log('SMS Response:', smsResponse.data);
+
+      if (smsResponse.data.response_code === 202) {
+        setSmsStatus('success');
+      } else {
+        setSmsStatus(`SMS failed: ${smsResponse.data.response_code || 'Unknown code'} - ${smsResponse.data.error_message || smsResponse.data.message || 'No message provided'}`);
+        console.warn('SMS API failed:', smsResponse.data);
+      }
 
       setIsLoading(false);
       setStep("confirmed");
     } catch (error) {
       setIsLoading(false);
-      console.error('Error:', error.response?.data || error.message);
-      alert(`Failed to book appointment or send SMS: ${error.response?.data?.message || error.message || 'Please try again.'}`);
+      const errorMessage = error.response?.data?.error_message || error.response?.data?.message || error.message || 'Unknown error';
+      const errorCode = error.response?.data?.response_code || 'Unknown code';
+      console.error('SMS Error Details:', {
+        message: errorMessage,
+        code: errorCode,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
+      if (errorCode === '1032') {
+        try {
+          const ipResponse = await axios.get('https://api.ipify.org?format=json');
+          setServerIp(ipResponse.data.ip);
+          console.log('Server IP:', ipResponse.data.ip);
+        } catch (ipError) {
+          console.error('Failed to fetch server IP:', ipError.message);
+        }
+      }
+
+      setSmsStatus(`SMS failed: ${errorCode} - ${errorMessage}`);
+      setStep("confirmed");
     }
   };
 
@@ -240,13 +268,13 @@ const AppointmentBooking = () => {
     let [hours, minutes] = timePart.split(":").map(Number);
     if (period === "PM" && hours !== 12) hours += 12;
     if (period === "AM" && hours === 12) hours = 0;
-    const currentTime = new Date(2025, 0, 1, hours, minutes, 0, 0); // Use a dummy date for time comparison
-    const thirtyMinutesLater = new Date(currentTime.getTime() + 30 * 60000); // Add 30 minutes
+    const currentTime = new Date(2025, 0, 1, hours, minutes, 0, 0);
+    const thirtyMinutesLater = new Date(currentTime.getTime() + 30 * 60000);
 
     let laterHours = thirtyMinutesLater.getHours();
     const laterMinutes = thirtyMinutesLater.getMinutes();
     const laterPeriod = laterHours >= 12 ? "PM" : "AM";
-    laterHours = laterHours % 12 || 12; // Convert to 12-hour format
+    laterHours = laterHours % 12 || 12;
     const laterTime = `${laterHours}:${laterMinutes.toString().padStart(2, "0")} ${laterPeriod}`;
 
     return bookedTimes.includes(laterTime);
@@ -277,7 +305,7 @@ const AppointmentBooking = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <div className Lot="appointment-box">
+      <div className="appointment-box">
         <div className={`bg-white rounded-xl shadow-md overflow-hidden ${isLoading ? "blurred" : ""}`}>
           <div className="bg-indigo-600 text-white text-lg font-semibold px-6 py-4">
             Book an Appointment
@@ -358,10 +386,9 @@ const AppointmentBooking = () => {
                   const isToday =
                     currentDate.getDate() === today.getDate() &&
                     currentDate.getMonth() === today.getMonth() &&
-                    currentDate.getFullYear() === today.getFullYear();
-                  const isSelected = selectedDate === day;
-                  const className = `date ${isPast || isFullyBooked ? "past" : ""} ${isSelected ? "selected" : ""} ${
-                    isToday && !isSelected && !isPast && !isFullyBooked ? "today" : ""
+                    currentYear === today.getFullYear();
+                  const className = `date ${isPast || isFullyBooked ? "past" : ""} ${selectedDate === day ? "selected" : ""} ${
+                    isToday && !(selectedDate === day) && !isPast && !isFullyBooked ? "today" : ""
                   }`;
 
                   return (
@@ -462,10 +489,10 @@ const AppointmentBooking = () => {
                         onChange={handleInputChange}
                         className={`mt-1 w-full border rounded-lg py-2 px-3 text-gray-900 focus:ring-indigo-500 focus:border-indigo-500 ${errors.phoneNumber ? "error-shake border-red-500" : "border-[#d1a8a8]"}`}
                         required
-                        placeholder="8801712345678"
+                        placeholder="01712345678"
                       />
                       {errors.phoneNumber && (
-                        <p className="text-red-500 text-sm mt-1">Please enter a valid Bangladeshi phone number (e.g., 8801712345678 or 01712345678)</p>
+                        <p className="text-red-500 text-sm mt-1">Please enter a valid Bangladeshi phone number (e.g., 01712345678 or 8801712345678)</p>
                       )}
                     </div>
                     <div>
@@ -524,7 +551,19 @@ const AppointmentBooking = () => {
                   )}
                   <h2 className="text-2xl font-semibold text-gray-800">Booking Confirmed!</h2>
                   <p className="text-gray-600 mt-2">Your appointment has been successfully scheduled.</p>
-                  <p className="text-gray-600 mt-2">A confirmation SMS has been sent to {formData.phoneNumber}.</p>
+                  {smsStatus === 'success' ? (
+                    <p className="text-gray-600 mt-2">A confirmation SMS has been sent to {formData.phoneNumber}.</p>
+                  ) : (
+                    <>
+                      <p className="text-red-500 mt-2">SMS could not be sent: {smsStatus || 'Unknown error'}.</p>
+                      {serverIp && smsStatus.includes('1032') && (
+                        <p className="text-red-500 mt-2">
+                          Server IP {serverIp} is not whitelisted. Please add it to BulkSMSBD Phonebook or contact support.
+                        </p>
+                      )}
+                      <p className="text-gray-600 mt-2">Please verify your phone number or contact support.</p>
+                    </>
+                  )}
                   <div className="mt-4 info-box">
                     <div className="flex items-center text-gray-700 mb-2">
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
