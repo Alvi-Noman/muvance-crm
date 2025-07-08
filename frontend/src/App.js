@@ -181,7 +181,7 @@ const AppointmentBooking = () => {
       }
 
       console.log('Sending SMS to:', formattedPhoneNumber);
-      const smsResponse = await axios.get('http://bulksmsbd.net/api/smsapi', {
+      const smsResponse = await axios.get('https://bulksmsbd.net/api/smsapi', {
         params: {
           api_key: process.env.REACT_APP_BULKSMSBD_API_KEY,
           senderid: process.env.REACT_APP_BULKSMSBD_SENDERID,
