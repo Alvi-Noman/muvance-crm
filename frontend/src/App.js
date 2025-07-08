@@ -3,7 +3,7 @@ import axios from 'axios';
 import './App.css';
 
 const AppointmentBooking = () => {
-  const today = new Date(); // Current date: July 8, 2025, 2:05 PM +06
+  const today = new Date(); // Current date: July 8, 2025, 3:43 PM +06
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectedDate, setSelectedDate] = useState(today.getDate());
@@ -180,7 +180,13 @@ const AppointmentBooking = () => {
         throw new Error('SMS message too long');
       }
 
-      console.log('Sending SMS to:', formattedPhoneNumber);
+      console.log('SMS Request Params:', {
+        api_key: process.env.REACT_APP_BULKSMSBD_API_KEY,
+        senderid: process.env.REACT_APP_BULKSMSBD_SENDERID,
+        number: formattedPhoneNumber,
+        message: smsMessage,
+        type: 'text',
+      });
       const smsResponse = await axios.get('https://bulksmsbd.net/api/smsapi', {
         params: {
           api_key: process.env.REACT_APP_BULKSMSBD_API_KEY,
@@ -205,11 +211,12 @@ const AppointmentBooking = () => {
       setIsLoading(false);
       const errorMessage = error.response?.data?.error_message || error.response?.data?.message || error.message || 'Unknown error';
       const errorCode = error.response?.data?.response_code || 'Unknown code';
-      console.error('SMS Error Details:', {
+      console.error('SMS Error Full Details:', {
         message: errorMessage,
         code: errorCode,
         status: error.response?.status,
         data: error.response?.data,
+        fullError: error,
       });
 
       if (errorCode === '1032') {
@@ -555,7 +562,9 @@ const AppointmentBooking = () => {
                     <p className="text-gray-600 mt-2">A confirmation SMS has been sent to {formData.phoneNumber}.</p>
                   ) : (
                     <>
-                      <p className="text-red-500 mt-2">SMS could not be sent: {smsStatus || 'Unknown error'}.</p>
+                      <p className="text-red-500 mt-2">
+                        {smsStatus || 'Unknown error'}. Please verify your phone number or contact support at support@yourdomain.com.
+                      </p>
                       {serverIp && smsStatus.includes('1032') && (
                         <p className="text-red-500 mt-2">
                           Server IP {serverIp} is not whitelisted. Please add it to BulkSMSBD Phonebook or contact support.
