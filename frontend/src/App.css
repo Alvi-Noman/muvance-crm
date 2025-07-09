@@ -4,13 +4,6 @@
   font-family: 'Inter', system-ui, sans-serif;
 }
 
-html, body {
-  /*background-color: #f5f5f5; /* Light gray background to make shadow more visible */
-}
-
-.gradient-bg {
-  background-color: #4b5ec8;
-}
 .appointment-details {
   background-color: #e6f0fa;
   border-radius: 8px;
@@ -69,7 +62,7 @@ html, body {
   margin: 0 auto 12px; /* Increased margin for mobile */
 }
 .checkmark__circle {
- stroke-dasharray: 166;
+  stroke-dasharray: 166;
   stroke-dashoffset: 166;
   stroke-width: 2;
   stroke-miterlimit: 10;
@@ -194,28 +187,6 @@ html, body {
   color: #9ca3af;
   cursor: not-allowed;
 }
-.bg-indigo-600 {
-  padding: 1rem 1.5rem; /* Original for mobile */
-  font-size: 20px; /* Smaller 30-Minute Discovery Call for mobile */
-}
-.bg-indigo-600 .text-sm {
-  margin-top: 0.25rem; /* Reduced gap for mobile */
-}
-.appointment-box .py-3 {
-  font-size: 14px; /* Smaller time selection text for mobile */
-}
-.py-3 {
-  font-size: 18px; /* Button text for mobile (overridden for time slots) */
-}
-.text-2xl {
-  font-size: 20px; /* Match 30-Minute Discovery Call for mobile */
-}
-.appointment-details .text-gray-600 {
-  font-size: 14px; /* Mobile */
-}
-.info-box .text-gray-600 {
-  font-size: 14px; /* Mobile */
-}
 
 /* Desktop-specific styles (min-width: 768px) */
 @media (min-width: 768px) {
@@ -227,14 +198,6 @@ html, body {
   }
   .appointment-box {
     font-size: 16px; /* Smallest text (base for info text) */
-  }
-  .appointment-box .bg-indigo-600 {
-    padding: 1.62rem 2.43rem; /* 1.35x of 1.2rem, 1.8rem for taller heading */
-    font-size: 24px; /* 30-Minute Discovery Call */
-  }
-  .appointment-box .bg-indigo-600 .text-sm {
-    font-size: 16px; /* Info text */
-    margin-top: 0.3375rem; /* 1.35x of 0.25rem, reduced gap for desktop */
   }
   .calendar-grid {
     gap: 2.7px; /* 1.35x of 2px */
@@ -274,11 +237,6 @@ html, body {
   .py-3 {
     padding-top: 0.945rem; /* 1.35x of 0.7rem, for time slot buttons */
     padding-bottom: 0.945rem; /* 1.35x of 0.7rem, for time slot buttons */
-    font-size: 18px; /* Button text */
-  }
-  .appointment-box .bg-indigo-600 + div + div .py-3 {
-    padding-top: 0.54rem; /* 1.35x of 0.4rem, for CTA buttons */
-    padding-bottom: 0.54rem; /* 1.35x of 0.4rem, for CTA buttons */
     font-size: 18px; /* Button text */
   }
   .px-4 {
@@ -324,12 +282,6 @@ html, body {
   .info-box {
     padding: 2.025rem; /* 1.35x of 16px */
     border-radius: 0.675rem; /* 1.35x of 8px */
-  }
-  .appointment-details .text-gray-600 {
-    font-size: 16px; /* Desktop */
-  }
-  .info-box .text-gray-600 {
-    font-size: 16px; /* Desktop */
   }
   @keyframes shake {
     0%, 100% { transform: translateX(0); }

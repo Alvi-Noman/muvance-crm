@@ -3,7 +3,7 @@ import axios from 'axios';
 import './App.css';
 
 const AppointmentBooking = () => {
-  const today = new Date(); // Current date: July 8, 2025, 3:43 PM +06
+  const today = new Date('2025-07-09T15:34:00+06:00'); // Current date: July 9, 2025, 3:34 PM +06
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectedDate, setSelectedDate] = useState(today.getDate());
@@ -108,7 +108,7 @@ const AppointmentBooking = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value.trim(),
+      [name]: name === "fullName" ? value : value.trim(), // Allow spaces in fullName, trim others
     }));
     setErrors((prev) => ({
       ...prev,
@@ -118,7 +118,7 @@ const AppointmentBooking = () => {
 
   const handleConfirmBooking = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^(?:(?:\+88|88)?\d{11}|\d{11})$/;
+    const phoneRegex = /^01\d{9}$/;
     const newErrors = {
       fullName: !formData.fullName,
       phoneNumber: !formData.phoneNumber || !phoneRegex.test(formData.phoneNumber),
@@ -162,15 +162,7 @@ const AppointmentBooking = () => {
       });
       console.log('Booking Response:', appointmentResponse.data);
 
-      let formattedPhoneNumber = formData.phoneNumber;
-      if (formattedPhoneNumber.startsWith('+88')) {
-        formattedPhoneNumber = formattedPhoneNumber.slice(1);
-      } else if (!formattedPhoneNumber.startsWith('88')) {
-        formattedPhoneNumber = `88${formattedPhoneNumber}`;
-      }
-      if (!/^88\d{11}$/.test(formattedPhoneNumber)) {
-        throw new Error('Invalid phone number format for SMS API');
-      }
+      const formattedPhoneNumber = `88${formData.phoneNumber}`;
       console.log('Formatted Phone Number:', formattedPhoneNumber);
 
       const smsMessage = `Dear ${formData.fullName}, your appointment is confirmed for ${appointmentDate} at ${selectedTime}. Thank you!`;
@@ -493,7 +485,7 @@ const AppointmentBooking = () => {
                         placeholder="01712345678"
                       />
                       {errors.phoneNumber && (
-                        <p className="text-red-500 text-sm mt-1">Please enter a valid Bangladeshi phone number (e.g., 01712345678 or 8801712345678)</p>
+                        <p className="text-red-500 text-sm mt-1">Please enter a valid 11-digit phone number starting with 01 (e.g., 01712345678)</p>
                       )}
                     </div>
                     <div>
@@ -526,19 +518,21 @@ const AppointmentBooking = () => {
                     <button
                       onClick={handleConfirmBooking}
                       className="bg-indigo-600 text-white w-full py-3 px-6 rounded-lg hover:bg-indigo-700 mb-4"
+                      style={{ fontSize: '16px' }}
                       disabled={isLoading}
                     >
-                      Confirm Booking
+                      Confirm
                     </button>
                     <button
                       onClick={handleBackToTime}
                       className="bg-white text-black w-full py-3 px-6 rounded-lg flex items-center justify-center hover:bg-gray-100"
+                      style={{ fontSize: '16px' }}
                       disabled={isLoading}
                     >
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                       </svg>
-                      Back to Time Selection
+                      Back
                     </button>
                   </div>
                 </div>
@@ -550,11 +544,9 @@ const AppointmentBooking = () => {
                       <path className="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
                     </svg>
                   )}
-                  <h2 className="text-2xl font-semibold text-gray-800">Booking Confirmed!</h2>
-                  <p className="text-gray-600 mt-2">Your appointment has been successfully scheduled.</p>
-                  {smsStatus === 'success' ? (
-                    <p className="text-gray-600 mt-2">A confirmation SMS has been sent to {formData.phoneNumber}.</p>
-                  ) : (
+                  <h2 className="text-2xl font-semibold text-gray-800">This call is scheduled</h2>
+                  <p className="text-gray-600 mt-2">A confirmation SMS has been sent to {formData.phoneNumber}.</p>
+                  {smsStatus !== 'success' && (
                     <>
                       <p className="text-red-500 mt-2">
                         {smsStatus || 'Unknown error'}. Please verify your phone number or contact support at support@yourdomain.com.
@@ -570,9 +562,18 @@ const AppointmentBooking = () => {
                   <div className="mt-4 info-box">
                     <div className="flex items-center text-gray-700 mb-2">
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                      </svg>
+                      <h3 className="text-md font-medium">What</h3>
+                    </div>
+                    <div className="ml-7 text-gray-600">
+                      <p>Introduction between Muvance and {formData.fullName}.</p>
+                    </div>
+                    <div className="flex items-center text-gray-700 mt-4 mb-2">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      <h3 className="text-md font-medium">Appointment Details</h3>
+                      <h3 className="text-md font-medium">When</h3>
                     </div>
                     <div className="ml-7 text-gray-600">
                       <p>Date: {appointmentDetailsDate}</p>
@@ -582,13 +583,24 @@ const AppointmentBooking = () => {
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
-                      <h3 className="text-md font-medium">Your Information</h3>
+                      <h3 className="text-md font-medium">Who</h3>
                     </div>
                     <div className="ml-7 text-gray-600">
-                      <p>Name: {formData.fullName}</p>
-                      <p>Phone Number: {formData.phoneNumber}</p>
-                      <p>Email: {formData.email}</p>
-                      {formData.websiteLink && <p>Website Link: {formData.websiteLink}</p>}
+                      <p>Fatema <span className="bg-blue-200 text-indigo-800 px-2 py-1 rounded-full" style={{ fontSize: '12px' }}>Host</span></p>
+                      <p>fatema@muvance.com</p>
+                      <p>01777388222</p>
+                      <p className="mt-4">{formData.fullName}</p>
+                      <p>{formData.email}</p>
+                      <p>{formData.phoneNumber}</p>
+                    </div>
+                    <div className="flex items-center text-gray-700 mt-4 mb-2">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      <h3 className="text-md font-medium">Where</h3>
+                    </div>
+                    <div className="ml-7 text-gray-600">
+                      <p>We’ll give you a quick reminder call just before the meeting and then join you on Google Meet. The meeting link will be shared with you beforehand.</p>
                     </div>
                   </div>
                 </div>
