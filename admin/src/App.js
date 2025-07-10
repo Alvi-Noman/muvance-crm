@@ -286,92 +286,94 @@ function App() {
 
   const dailyLeadData = getDailyLeadData();
 
+  const fetchAppointments = async (retries = 3, delay = 1000) => {
+    setIsInitialLoading(true);
+    const token = localStorage.getItem('token');
+    console.log('Fetching appointments with token:', token ? token.slice(0, 10) + '...' : 'No token');
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/appointments`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('Raw appointments response:', response.data);
+        const appointments = response.data.map(appointment => {
+          let mappedStatus = appointment.status || 'Meeting 1';
+          if (mappedStatus === 'New') {
+            mappedStatus = 'Meeting 1';
+          }
+          if (mappedStatus === 'Contacted' || mappedStatus === 'Pitched') {
+            mappedStatus = 'Need to Call';
+          }
+          return {
+            id: appointment._id,
+            fullName: appointment.fullName || 'Unknown Name',
+            phoneNumber: appointment.phoneNumber || 'No Phone',
+            email: appointment.email || '',
+            websiteLink: appointment.websiteLink || '',
+            submissionDate: appointment.submissionDate,
+            rawAppointmentDate: appointment.date,
+            appointmentTime: appointment.time,
+            status: mappedStatus,
+            service: appointment.activity?.some(a => a.text?.includes('Manually booked')) ? 'Manual Booking' : 'Appointment',
+            message: appointment.activity?.some(a => a.text?.includes('Manually booked')) ? 'Manually booked appointment.' : 'Booked via appointment system',
+            activity: appointment.activity || [],
+            latestNote: appointment.latestNote || ''
+          };
+        });
+        console.log('Mapped appointments:', appointments);
+        setLeads(appointments);
+        setDisplayedLeadsCount(Math.min(leadsPerPage, appointments.length));
+        setHasMore(appointments.length > leadsPerPage);
+        if (appointments.length > 0) {
+          const latest = appointments.reduce((latest, current) => {
+            const latestDate = new Date(latest.submissionDate);
+            const currentDate = new Date(current.submissionDate);
+            return currentDate > latestDate ? current : latest;
+          }, appointments[0]);
+          setLastLeadReceived(`Last Lead Received: ${new Date(latest.submissionDate).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}`);
+        } else {
+          setLastLeadReceived('No leads received yet');
+        }
+        setFetchError(null);
+        setIsInitialLoading(false);
+        return appointments;
+      } catch (error) {
+        console.error(`Fetch attempt ${attempt} failed:`, {
+          message: error.message,
+          response: error.response ? {
+            status: error.response.status,
+            data: error.response.data
+          } : null
+        });
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          console.log('Unauthorized, logging out');
+          handleLogout();
+          return [];
+        }
+        if (attempt < retries) {
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        let errorMessage = 'Failed to fetch appointments. Please ensure the backend server is running and try again.';
+        if (error.response) {
+          if (error.response.status === 404) {
+            errorMessage = 'Appointments endpoint not found. Check if the backend is correctly set up.';
+          } else if (error.response.status === 500) {
+            errorMessage = 'Server error. Please check the backend logs for details.';
+          }
+        } else if (error.code === 'ECONNREFUSED') {
+          errorMessage = 'Cannot connect to backend. Please ensure the server is running.';
+        }
+        setFetchError(errorMessage);
+        setLastLeadReceived('No leads received yet');
+        setIsInitialLoading(false);
+        return [];
+      }
+    }
+  };
+
   useEffect(() => {
     if (!isAuthenticated) return;
-    const fetchAppointments = async (retries = 3, delay = 1000) => {
-      setIsInitialLoading(true);
-      const token = localStorage.getItem('token');
-      console.log('Fetching appointments with token:', token ? token.slice(0, 10) + '...' : 'No token');
-      for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-          const response = await axios.get(`${API_BASE_URL}/api/appointments`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          console.log('Raw appointments response:', response.data);
-          const appointments = response.data.map(appointment => {
-            let mappedStatus = appointment.status || 'Meeting 1';
-            if (mappedStatus === 'New') {
-              mappedStatus = 'Meeting 1';
-            }
-            if (mappedStatus === 'Contacted' || mappedStatus === 'Pitched') {
-              mappedStatus = 'Need to Call';
-            }
-            return {
-              id: appointment._id,
-              fullName: appointment.fullName || 'Unknown Name',
-              phoneNumber: appointment.phoneNumber || 'No Phone',
-              email: appointment.email || '',
-              websiteLink: appointment.websiteLink || '',
-              submissionDate: appointment.submissionDate,
-              rawAppointmentDate: appointment.date,
-              appointmentTime: appointment.time,
-              status: mappedStatus,
-              service: appointment.activity?.some(a => a.text?.includes('Manually booked')) ? 'Manual Booking' : 'Appointment',
-              message: appointment.activity?.some(a => a.text?.includes('Manually booked')) ? 'Manually booked appointment.' : 'Booked via appointment system',
-              activity: appointment.activity || [],
-              latestNote: appointment.latestNote || ''
-            };
-          });
-          console.log('Mapped appointments:', appointments);
-          setLeads(appointments);
-          setDisplayedLeadsCount(Math.min(leadsPerPage, appointments.length));
-          setHasMore(appointments.length > leadsPerPage);
-          if (appointments.length > 0) {
-            const latest = appointments.reduce((latest, current) => {
-              const latestDate = new Date(latest.submissionDate);
-              const currentDate = new Date(current.submissionDate);
-              return currentDate > latestDate ? current : latest;
-            }, appointments[0]);
-            setLastLeadReceived(`Last Lead Received: ${new Date(latest.submissionDate).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}`);
-          } else {
-            setLastLeadReceived('No leads received yet');
-          }
-          setFetchError(null);
-          setIsInitialLoading(false);
-          return;
-        } catch (error) {
-          console.error(`Fetch attempt ${attempt} failed:`, {
-            message: error.message,
-            response: error.response ? {
-              status: error.response.status,
-              data: error.response.data
-            } : null
-          });
-          if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-            console.log('Unauthorized, logging out');
-            handleLogout();
-            return;
-          }
-          if (attempt < retries) {
-            await new Promise(resolve => setTimeout(resolve, delay));
-            continue;
-          }
-          let errorMessage = 'Failed to fetch appointments. Please ensure the backend server is running and try again.';
-          if (error.response) {
-            if (error.response.status === 404) {
-              errorMessage = 'Appointments endpoint not found. Check if the backend is correctly set up.';
-            } else if (error.response.status === 500) {
-              errorMessage = 'Server error. Please check the backend logs for details.';
-            }
-          } else if (error.code === 'ECONNREFUSED') {
-            errorMessage = 'Cannot connect to backend. Please ensure the server is running.';
-          }
-          setFetchError(errorMessage);
-          setLastLeadReceived('No leads received yet');
-          setIsInitialLoading(false);
-        }
-      }
-    };
     console.log('Initial fetchAppointments triggered');
     fetchAppointments();
   }, [isAuthenticated]);
