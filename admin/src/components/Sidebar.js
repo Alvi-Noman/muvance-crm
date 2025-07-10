@@ -1,7 +1,7 @@
 import React from 'react';
 import '../App.css';
 
-const Sidebar = ({ activeSection, handleSectionChange, handleLogout }) => {
+const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
   return (
     <nav className="sidebar">
       <div className="sidebar-header">
@@ -10,28 +10,28 @@ const Sidebar = ({ activeSection, handleSectionChange, handleLogout }) => {
       <ul className="nav-list">
         <li
           className={`nav-item ${activeSection === 'Dashboard' ? 'active' : ''}`}
-          onClick={() => handleSectionChange('Dashboard')}
+          onClick={() => onSectionChange('Dashboard')}
         >
           <span className="material-icons nav-icon">dashboard</span>
           <span>Dashboard</span>
         </li>
         <li
           className={`nav-item ${activeSection === 'Leads' ? 'active' : ''}`}
-          onClick={() => handleSectionChange('Leads')}
+          onClick={() => onSectionChange('Leads')}
         >
           <span className="material-icons nav-icon">people</span>
           <span>Leads</span>
         </li>
         <li
           className={`nav-item ${activeSection === 'Calendar' ? 'active' : ''}`}
-          onClick={() => handleSectionChange('Calendar')}
+          onClick={() => onSectionChange('Calendar')}
         >
           <span className="material-icons nav-icon">calendar_today</span>
           <span>Calendar</span>
         </li>
         <li
           className={`nav-item ${activeSection === 'Settings' ? 'active' : ''}`}
-          onClick={() => handleSectionChange('Settings')}
+          onClick={() => onSectionChange('Settings')}
         >
           <span className="material-icons nav-icon">settings</span>
           <span>Settings</span>
@@ -42,10 +42,12 @@ const Sidebar = ({ activeSection, handleSectionChange, handleLogout }) => {
             className="logout-btn"
             onClick={() => {
               if (window.confirm('Are you sure you want to logout?')) {
-                handleLogout();
+                onLogout();
               }
             }}
-          >Logout</button>
+          >
+            Logout
+          </button>
         </li>
       </ul>
     </nav>
