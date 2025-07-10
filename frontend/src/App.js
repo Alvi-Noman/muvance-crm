@@ -3,7 +3,7 @@ import axios from 'axios';
 import './App.css';
 
 const AppointmentBooking = () => {
-  const today = new Date('2025-07-09T15:34:00+06:00'); // Current date: July 9, 2025, 3:34 PM +06
+  const today = new Date(); // Use real-time date
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectedDate, setSelectedDate] = useState(today.getDate());
