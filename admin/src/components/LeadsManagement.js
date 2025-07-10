@@ -137,11 +137,11 @@ const LeadsManagement = ({
                           <img
                             src={lead.email ? `https://www.gravatar.com/avatar/${require('crypto-js/md5')(lead.email.trim().toLowerCase()).toString()}?d=mp&s=40&t=${Date.now()}` : 'https://www.gravatar.com/avatar/default@example.com?d=mp&s=40&t=${Date.now()}'}
                             alt="Profile"
-                            className={`profile-pic ${lead.service === 'Manual Booking' ? 'manual-lead' : ''}`}
+                            className={`profile-img ${lead.service === 'Manual Booking' ? 'manual-lead' : ''}`}
                           />
                           <div className="name-email">
                             <span className="lead-name">{lead.fullName}</span>
-                            <span className="lead-email">{lead.email || 'No email'}</span>
+                            <span className="lead-email">{lead.email || ''}</span>
                           </div>
                         </div>
                       </td>
@@ -154,7 +154,7 @@ const LeadsManagement = ({
                                 ? ''
                                 : lead.rawAppointmentDate
                                   ? new Date(lead.rawAppointmentDate).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-                                  : 'Not set'}
+                                  : ''}
                             </span>
                             <span className="lead-email">
                               {(lead.status === 'Converted' || lead.status === 'Lost') ? '' : (lead.appointmentTime || '')}
@@ -211,12 +211,12 @@ const LeadsManagement = ({
                   {isLoading ? 'Loading more leads...' : ''}
                 </div>
               )}
-              {!hasMore && filteredLeads.length > 0 && (
+              {!hasMore && (Array.isArray(filteredLeads) ? filteredLeads : []).length > 0 && (
                 <div className="end-message">
                   No more leads to display.
                 </div>
               )}
-              {filteredLeads.length === 0 && !isInitialLoading && (
+              {(Array.isArray(filteredLeads) ? filteredLeads : []).length === 0 && !isInitialLoading && (
                 <div className="end-message">
                   No leads match your search or filter criteria.
                 </div>
@@ -231,7 +231,7 @@ const LeadsManagement = ({
             <div className="drawer-header">
               <h2>Confirm Delete</h2>
               <button className="close-btn" onClick={cancelDelete}>
-                &times;
+                ×
               </button>
             </div>
             <p>Are you sure you want to delete this lead? This action cannot be undone.</p>
