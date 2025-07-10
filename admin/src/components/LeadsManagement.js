@@ -50,6 +50,9 @@ const LeadsManagement = ({
     }
   };
 
+  // Check if a search or filter is applied
+  const isSearchOrFilterApplied = searchQuery || statusFilter || filterOption !== 'Latest';
+
   return (
     <>
       <h1 className="leads-management-title">Leads Management</h1>
@@ -216,9 +219,14 @@ const LeadsManagement = ({
                   No more leads to display.
                 </div>
               )}
-              {(Array.isArray(filteredLeads) ? filteredLeads : []).length === 0 && !isInitialLoading && (
+              {(Array.isArray(filteredLeads) ? filteredLeads : []).length === 0 && !isInitialLoading && isSearchOrFilterApplied && (
                 <div className="end-message">
                   No leads match your search or filter criteria.
+                </div>
+              )}
+              {(Array.isArray(filteredLeads) ? filteredLeads : []).length === 0 && !isInitialLoading && !isSearchOrFilterApplied && (
+                <div className="end-message">
+                  No leads available. Add a new lead to get started.
                 </div>
               )}
             </>
