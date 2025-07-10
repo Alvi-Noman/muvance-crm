@@ -16,7 +16,7 @@ const getGravatarUrl = (email) => {
 };
 
 const generateDateOptions = () => {
-  const today = new Date('2025-05-21T15:23:00+06:00');
+  const today = new Date();
   const dates = [];
   const numDays = 365;
   for (let i = 0; i < numDays; i++) {
@@ -109,11 +109,11 @@ function App() {
   const [fetchError, setFetchError] = useState(null);
   const [actionError, setActionError] = useState(null);
   const [dateBookedTimes, setDateBookedTimes] = useState({});
-  const [selectedDate, setSelectedDate] = useState(new Date('2025-05-21T15:23:00+06:00'));
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeSection, setActiveSection] = useState('Dashboard');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [newUser, setNewUser] = useState({ username: '', email: '', password: '' });
-  const currentTime = new Date('2025-05-21T15:23:00+06:00');
+  const currentTime = new Date();
   const leadsPerPage = 15;
   const modalRef = useRef(null);
   const addLeadModalRef = useRef(null);
@@ -139,7 +139,7 @@ function App() {
         return lead.status === statusFilter;
       }
       if (filterOption === 'Top Priority') {
-        const currentDate = new Date('2025-05-21T15:23:00+06:00');
+        const currentDate = new Date();
         const appointmentDate = new Date(lead.rawAppointmentDate);
         return appointmentDate >= currentDate;
       }
@@ -210,7 +210,7 @@ function App() {
     setFetchError(null);
     setActionError(null);
     setDateBookedTimes({});
-    setSelectedDate(new Date('2025-05-21T15:23:00+06:00'));
+    setSelectedDate(new Date());
     setIsSettingsOpen(false);
     console.log('Logout triggered');
   };
@@ -245,7 +245,7 @@ function App() {
     }
   };
 
-  const today = new Date('2025-05-21T15:23:00+06:00');
+  const today = new Date();
   const newLeadsToday = leads.filter(lead => {
     const submissionDate = new Date(lead.submissionDate);
     return submissionDate.toLocaleDateString('en-US') === today.toLocaleDateString('en-US');
@@ -263,7 +263,7 @@ function App() {
 
   const getDailyLeadData = () => {
     const dailyCounts = {};
-    const today = new Date('2025-05-21T15:23:00+06:00');
+    const today = new Date();
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
@@ -291,11 +291,13 @@ function App() {
     const fetchAppointments = async (retries = 3, delay = 1000) => {
       setIsInitialLoading(true);
       const token = localStorage.getItem('token');
+      console.log('Fetching appointments with token:', token ? token.slice(0, 10) + '...' : 'No token');
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
           const response = await axios.get(`${API_BASE_URL}/api/appointments`, {
             headers: { Authorization: `Bearer ${token}` }
           });
+          console.log('Raw appointments response:', response.data);
           const appointments = response.data.map(appointment => {
             let mappedStatus = appointment.status || 'Meeting 1';
             if (mappedStatus === 'New') {
@@ -320,6 +322,7 @@ function App() {
               latestNote: appointment.latestNote || ''
             };
           });
+          console.log('Mapped appointments:', appointments);
           setLeads(appointments);
           setDisplayedLeadsCount(Math.min(leadsPerPage, appointments.length));
           setHasMore(appointments.length > leadsPerPage);
@@ -345,6 +348,7 @@ function App() {
             } : null
           });
           if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+            console.log('Unauthorized, logging out');
             handleLogout();
             return;
           }
@@ -368,6 +372,7 @@ function App() {
         }
       }
     };
+    console.log('Initial fetchAppointments triggered');
     fetchAppointments();
   }, [isAuthenticated]);
 
@@ -381,7 +386,7 @@ function App() {
       const token = localStorage.getItem('token');
       try {
         const formattedDate = selectedDate.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-        console.log('Fetching booked times for date:', formattedDate);
+        console.log('Fetching booked times for date:', formattedDate, selectedDate.toISOString());
         const response = await axios.get(`${API_BASE_URL}/api/appointments`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -408,6 +413,7 @@ function App() {
           } : null
         });
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          console.log('Unauthorized in fetchBookedTimes, logging out');
           handleLogout();
           return;
         }
@@ -418,6 +424,7 @@ function App() {
         }));
       }
     };
+    console.log('fetchBookedTimes useEffect triggered with selectedDate:', selectedDate.toISOString());
     fetchBookedTimes();
   }, [selectedDate, isAuthenticated]);
 
@@ -509,6 +516,7 @@ function App() {
         } : null
       });
       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        console.log('Unauthorized, logging out');
         handleLogout();
         return;
       }
@@ -530,6 +538,7 @@ function App() {
     } catch (error) {
       console.error('Error deleting lead:', error);
       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        console.log('Unauthorized, logging out');
         handleLogout();
         return;
       }
@@ -648,7 +657,7 @@ function App() {
 
   const closeDetails = () => {
     setSelectedLead(null);
-    setSelectedDate(new Date('2025-05-21T15:23:00+06:00'));
+    setSelectedDate(new Date());
     setDateBookedTimes(prev => {
       const { [selectedDate.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })]: omit, ...rest } = prev;
       return rest;
@@ -690,6 +699,7 @@ function App() {
     } catch (error) {
       console.error('Error adding note:', error);
       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        console.log('Unauthorized, logging out');
         handleLogout();
         return;
       }
@@ -712,7 +722,7 @@ function App() {
       console.log('No date selected in handleDateChange');
       return;
     }
-    console.log('Selected date in handleDateChange:', date);
+    console.log('Selected date in handleDateChange:', date.toISOString());
     setSelectedDate(date);
     const formatted = date.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     if (selectedLead) {
@@ -760,7 +770,7 @@ function App() {
         });
 
         setSelectedLead(null);
-        setSelectedDate(new Date('2025-05-21T15:23:00+06:00'));
+        setSelectedDate(new Date());
         setDateBookedTimes(prev => {
           const { [selectedLead.newAppointmentDate]: omit, ...rest } = prev;
           return rest;
@@ -769,6 +779,7 @@ function App() {
       } catch (error) {
         console.error('Error updating appointment:', error);
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          console.log('Unauthorized, logging out');
           handleLogout();
           return;
         }
@@ -810,6 +821,7 @@ function App() {
         } : null
       });
       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        console.log('Unauthorized, logging out');
         handleLogout();
         return;
       }
@@ -827,12 +839,12 @@ function App() {
       appointmentDate: dateOptions[0].value,
       appointmentTime: timeOptions.find(opt => !opt.disabled)?.value || timeOptions[0].value
     });
-    setSelectedDate(new Date('2025-05-21T15:23:00+06:00'));
+    setSelectedDate(new Date());
   };
 
   const closeAddLeadModal = () => {
     setIsAddLeadOpen(false);
-    setSelectedDate(new Date('2025-05-21T15:23:00+06:00'));
+    setSelectedDate(new Date());
     setDateBookedTimes(prev => {
       const { [selectedDate.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })]: omit, ...rest } = prev;
       return rest;
@@ -888,7 +900,12 @@ function App() {
           activity: newAppointment.activity,
           latestNote: newAppointment.latestNote
         };
-        setLeads([...leads, newLeadEntry]);
+        const updatedAppointments = await fetchAppointments();
+        if (updatedAppointments.length > 0) {
+          setLeads(updatedAppointments);
+        } else {
+          setLeads([...leads, newLeadEntry]);
+        }
         setDisplayedLeadsCount(prev => Math.min(prev + 1, filteredLeads.length + 1));
         setHasMore(filteredLeads.length + 1 > leadsPerPage);
 
@@ -913,11 +930,18 @@ function App() {
           appointmentDate: '',
           appointmentTime: ''
         });
-        setSelectedDate(new Date('2025-05-21T15:23:00+06:00'));
+        setSelectedDate(new Date());
         setActionError(null);
       } catch (error) {
-        console.error('Error adding new lead:', error);
+        console.error('Error adding new lead:', {
+          message: error.message,
+          response: error.response ? {
+            status: error.response.status,
+            data: error.response.data
+          } : null
+        });
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          console.log('Unauthorized, logging out');
           handleLogout();
           return;
         }
@@ -945,6 +969,7 @@ function App() {
       } catch (error) {
         console.error('Error adding user:', error);
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          console.log('Unauthorized, logging out');
           handleLogout();
           return;
         }
