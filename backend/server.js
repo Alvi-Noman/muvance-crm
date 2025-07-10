@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI; 
+const MONGO_URI = process.env.MONGO_URI;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-api-key';
 
 mongoose.connect(MONGO_URI, {
@@ -106,11 +106,14 @@ const authenticateAdmin = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
-    const user = User.findById(decoded.id);
-    if (!user || !user.isAdmin) {
-      return res.status(403).json({ message: 'Admin access required' });
-    }
-    next();
+    User.findById(decoded.id).then(user => {
+      if (!user || !user.isAdmin) {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+      next();
+    }).catch(error => {
+      return res.status(403).json({ message: 'Invalid or expired token' });
+    });
   } catch (error) {
     return res.status(403).json({ message: 'Invalid or expired token' });
   }
@@ -193,7 +196,7 @@ app.post('/api/settings/add-user', authenticateAdmin, [
   }
 });
 
-app.post('/api/appointments', [
+app.post('/api/appointments', authenticateToken, [
   body('phoneNumber').isLength({ min: 11, max: 11 }).withMessage('Phone number must be exactly 11 digits'),
 ], async (req, res) => {
   const errors = validationResult(req);
@@ -228,7 +231,7 @@ app.post('/api/appointments', [
   }
 });
 
-app.get('/api/appointments', async (req, res) => {
+app.get('/api/appointments', authenticateToken, async (req, res) => {
   try {
     const appointments = await Appointment.find();
     console.log('Appointments Fetched:', appointments);

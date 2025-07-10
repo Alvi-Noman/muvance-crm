@@ -17,6 +17,21 @@ const AddLeadModal = ({
 }) => {
   if (!isAddLeadOpen) return null;
 
+  const validatePhoneNumber = (phone) => {
+    const digitsOnly = phone.replace(/\D/g, '');
+    return digitsOnly.length === 11;
+  };
+
+  const handlePhoneChange = (e) => {
+    const { value } = e.target;
+    handleNewLeadChange(e);
+    if (value && !validatePhoneNumber(value)) {
+      e.target.setCustomValidity('Phone number must be exactly 11 digits');
+    } else {
+      e.target.setCustomValidity('');
+    }
+  };
+
   return (
     <div className="drawer" ref={addLeadModalRef} onClick={(e) => { if (e.target === addLeadModalRef.current) closeAddLeadModal(); }}>
       <div className="drawer-content" onClick={(e) => e.stopPropagation()}>
@@ -41,12 +56,13 @@ const AddLeadModal = ({
           <label>
             Client Phone Number:
             <input
-              type="text"
+              type="tel"
               name="phone"
               value={newLead.phone}
-              onChange={handleNewLeadChange}
-              placeholder="Enter phone number"
+              onChange={handlePhoneChange}
+              placeholder="Enter 11-digit phone number"
               className="new-lead-input"
+              pattern="\d{11}"
               required
             />
           </label>
@@ -79,8 +95,8 @@ const AddLeadModal = ({
               onChange={handleDateChange}
               dateFormat="MMMM d, yyyy"
               className="new-lead-select"
-              minDate={new Date('2025-05-20')}
-              maxDate={new Date('2026-05-19')}
+              minDate={new Date()}
+              maxDate={new Date(new Date().setFullYear(new Date().getFullYear() + 1))}
             />
           </label>
           <label>
