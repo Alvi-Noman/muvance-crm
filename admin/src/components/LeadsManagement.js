@@ -130,7 +130,7 @@ const LeadsManagement = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {currentLeads.map((lead) => (
+                  {(Array.isArray(currentLeads) ? currentLeads : []).map((lead) => (
                     <tr key={lead.id}>
                       <td>
                         <div className="name-container">
