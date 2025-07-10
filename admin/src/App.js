@@ -1,3 +1,4 @@
+// App.js
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import md5 from 'crypto-js/md5';
@@ -1012,7 +1013,7 @@ function App() {
         )}
         {activeSection === 'Leads' && (
           <LeadsManagement
-            leads={currentLeads}
+            currentLeads={currentLeads} // Changed from leads={currentLeads}
             statusOptions={statusOptions}
             openStatusDropdownId={openStatusDropdownId}
             toggleStatusDropdown={toggleStatusDropdown}
@@ -1037,6 +1038,8 @@ function App() {
             actionError={actionError}
             getStatusColor={getStatusColor}
             handleDeleteLead={handleDeleteLead}
+            statusFilter={statusFilter} // Added missing prop
+            filteredLeads={filteredLeads} // Added missing prop
           />
         )}
         {activeSection === 'Calendar' && (
