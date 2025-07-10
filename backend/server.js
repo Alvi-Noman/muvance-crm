@@ -196,7 +196,8 @@ app.post('/api/settings/add-user', authenticateAdmin, [
   }
 });
 
-app.post('/api/appointments', authenticateToken, [
+// CHANGED: Removed authenticateToken to allow public booking
+app.post('/api/appointments', [
   body('phoneNumber').isLength({ min: 11, max: 11 }).withMessage('Phone number must be exactly 11 digits'),
 ], async (req, res) => {
   const errors = validationResult(req);
@@ -231,7 +232,8 @@ app.post('/api/appointments', authenticateToken, [
   }
 });
 
-app.get('/api/appointments', authenticateToken, async (req, res) => {
+// CHANGED: Removed authenticateToken to allow public fetching of appointments
+app.get('/api/appointments', async (req, res) => {
   try {
     const appointments = await Appointment.find();
     console.log('Appointments Fetched:', appointments);
