@@ -151,6 +151,7 @@ const AppointmentBooking = () => {
         submissionDate,
       });
 
+      // 1. ATTEMPT TO SAVE APPOINTMENT
       const appointmentResponse = await axios.post('https://muvance-crm.onrender.com/api/appointments', {
         date: new Date(currentYear, currentMonth, selectedDate).toISOString(),
         time: selectedTime,
@@ -172,6 +173,7 @@ const AppointmentBooking = () => {
         throw new Error('SMS message too long');
       }
 
+      // 2. ATTEMPT TO SEND SMS
       console.log('SMS Request Params:', {
         api_key: process.env.REACT_APP_BULKSMSBD_API_KEY,
         senderid: process.env.REACT_APP_BULKSMSBD_SENDERID,
@@ -198,7 +200,19 @@ const AppointmentBooking = () => {
       }
 
       setIsLoading(false);
-      setStep("confirmed");
+      
+      // *** MODIFICATION START (SUCCESS REDIRECT) ***
+      const thankYouUrl = "https://muvance.com/thankyou";
+      
+      if (window.top && window.top !== window.self) {
+        // We are in an iframe, redirect the parent window for conversion tracking
+        window.top.location.href = thankYouUrl;
+      } else {
+        // Not in an iframe, redirect the current window
+        window.location.href = thankYouUrl;
+      }
+      // *** MODIFICATION END ***
+
     } catch (error) {
       setIsLoading(false);
       const errorMessage = error.response?.data?.error_message || error.response?.data?.message || error.message || 'Unknown error';
@@ -222,14 +236,25 @@ const AppointmentBooking = () => {
       }
 
       setSmsStatus(`SMS failed: ${errorCode} - ${errorMessage}`);
-      setStep("confirmed");
+      
+      // *** MODIFICATION START (FAILURE REDIRECT) ***
+      // We redirect here too. Even if the SMS failed, the appointment was likely saved 
+      // in the first step (axios.post('.../appointments')), so we want to count the conversion.
+      const thankYouUrl = "https://muvance.com/thankyou";
+      
+      if (window.top && window.top !== window.self) {
+        window.top.location.href = thankYouUrl;
+      } else {
+        window.location.href = thankYouUrl;
+      }
+      // *** MODIFICATION END ***
     }
   };
 
   const handlePrevMonth = () => {
     const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
     const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-    if (new Date(prevYear, prevMonth + 1, 0) < today.setHours(0, 0, 0, 0)) return;
+    if (new Date(prevYear, prevMonth, today.getDate()) < today.setHours(0, 0, 0, 0)) return;
     setCurrentMonth(prevMonth);
     setCurrentYear(prevYear);
     setSelectedDate(null);
