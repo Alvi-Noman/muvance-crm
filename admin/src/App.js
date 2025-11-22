@@ -431,41 +431,41 @@ function App() {
     fetchBookedTimes();
   }, [selectedDate, isAuthenticated]);
 
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
-        setSelectedLead(null);
-      }
-      if (addLeadModalRef.current && !addLeadModalRef.current.contains(event.target)) {
-        setIsAddLeadOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoading) {
-          setIsLoading(true);
-          setTimeout(() => {
-            setDisplayedLeadsCount(prev => {
-              const newCount = prev + leadsPerPage;
-              setHasMore(newCount < filteredLeads.length);
-              return Math.min(newCount, filteredLeads.length);
-            });
-            setIsLoading(false);
-          }, 500);
+    useEffect(() => {
+      if (!isAuthenticated) return;
+      const handleClickOutside = (event) => {
+        if (modalRef.current && !modalRef.current.contains(event.target)) {
+          setSelectedLead(null);
         }
-      },
-      { threshold: 1.0 }
-    );
+        if (addLeadModalRef.current && !addLeadModalRef.current.contains(event.target)) {
+          setIsAddLeadOpen(false);
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, [isAuthenticated]);
+
+    useEffect(() => {
+      if (!isAuthenticated) return;
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && hasMore && !isLoading) {
+            setIsLoading(true);
+            setTimeout(() => {
+              setDisplayedLeadsCount(prev => {
+                const newCount = prev + leadsPerPage;
+                setHasMore(newCount < filteredLeads.length);
+                return Math.min(newCount, filteredLeads.length);
+              });
+              setIsLoading(false);
+            }, 500);
+          }
+        },
+        { threshold: 1.0 }
+      );
 
     observerRef.current = observer;
 
