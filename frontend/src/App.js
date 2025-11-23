@@ -19,6 +19,7 @@ const AppointmentBooking = () => {
     fullName: false,
     phoneNumber: false,
     email: false,
+    websiteLink: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [bookedTimes, setBookedTimes] = useState([]);
@@ -26,7 +27,19 @@ const AppointmentBooking = () => {
   const [smsStatus, setSmsStatus] = useState(null);
   const [serverIp, setServerIp] = useState(null);
 
-  const timeSlots = ["11:00 AM", "1:00 PM", "4:00 PM", "7:00 PM", "9:00 PM"];
+  const timeSlots = [
+    "11:00 AM",
+    "12:00 PM",
+    "1:00 PM",
+    "2:00 PM",
+    "4:00 PM",
+    "5:00 PM",
+    "6:00 PM",
+    "7:00 PM",
+    "8:00 PM",
+    "9:00 PM",
+    "10:00 PM",
+  ];
 
   const getDaysInMonth = (year, month) => {
     return new Date(year, month + 1, 0).getDate();
@@ -119,10 +132,13 @@ const AppointmentBooking = () => {
   const handleConfirmBooking = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^01\d{9}$/;
+    const urlRegex = /^(https?:\/\/)?[a-z0-9-]+(\.[a-z0-9-]+)*\.(com|net|org|info|biz|online|store|shop|xyz|tech|io|co|me|app|ai|dev|digital|solutions|agency|media|design|cloud|market|sale|fashion|clothing|jewelry|home|tools|plus|pro|club|center|zone|global|world|[a-z]{2,24})(\/[^\s]*)?$/i;
+
     const newErrors = {
       fullName: !formData.fullName,
       phoneNumber: !formData.phoneNumber || !phoneRegex.test(formData.phoneNumber),
       email: !formData.email || !emailRegex.test(formData.email),
+      websiteLink: !formData.websiteLink || !urlRegex.test(formData.websiteLink),
     };
     setErrors(newErrors);
 
@@ -528,15 +544,21 @@ const AppointmentBooking = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 text-left">
-                        Your eCommerce Website Link (If any)
+                        Your eCommerce Website Link *
                       </label>
                       <input
                         type="url"
                         name="websiteLink"
                         value={formData.websiteLink}
                         onChange={handleInputChange}
-                        className="mt-1 w-full border border-[#d1a8a8] rounded-lg py-2 px-3 text-gray-900 focus:ring-indigo-500 focus:border-indigo-500"
+                        className={`mt-1 w-full border rounded-lg py-2 px-3 text-gray-900 focus:ring-indigo-500 focus:border-indigo-500 ${errors.websiteLink ? "error-shake border-red-500" : "border-[#d1a8a8]"}`}
+                        required
                       />
+                      {errors.websiteLink && (
+                        <p className="text-red-500 text-sm mt-1">
+                          Please enter a valid website URL (e.g. yourstore.com)
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="mt-6 text-center">
