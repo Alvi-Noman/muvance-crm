@@ -96,6 +96,7 @@ const AppointmentBooking = () => {
 
   useEffect(() => {
     fetchFullyBookedDates();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMonth, currentYear]);
 
   const handleDateClick = (day) => {

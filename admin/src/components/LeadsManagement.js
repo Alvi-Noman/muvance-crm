@@ -51,11 +51,23 @@ const LeadsManagement = ({
     }
   };
 
+  /**
+   * ✅ IMPROVED FORMATTER
+   * This now handles pure numbers, strings with currency symbols, 
+   * and text ranges like "5k-10k".
+   */
   const formatCurrency = (value) => {
-    if (!value) return '-';
-    const num = parseInt(value);
-    if (isNaN(num)) return '-';
-    return `৳${num.toLocaleString('en-US')}`;
+    if (value === undefined || value === null || value === '') return '-';
+    
+    // If it's a pure number or a numeric string, format it with Taka symbol
+    const num = parseFloat(String(value).replace(/[^0-9.]/g, ''));
+    
+    if (!isNaN(num) && /^\d+(\.\d+)?$/.test(String(value).trim())) {
+      return `৳${num.toLocaleString('en-US')}`;
+    }
+
+    // If it contains text (like "5000-10000" or "Low"), return the raw value
+    return value;
   };
 
   const isSearchOrFilterApplied =
@@ -208,7 +220,6 @@ const LeadsManagement = ({
 
                         <td>{lead.phoneNumber}</td>
 
-                        {/* ✅ ONLY FIX IS HERE */}
                         <td>
                           {lead.websiteLink ? (
                             <a
@@ -399,7 +410,7 @@ const LeadsManagement = ({
             </div>
 
             <p>
-              Are you sure you want to delete this lead? This action cannot be
+              Are you sure you want to delete this lead? This action cannot 
               be undone.
             </p>
 
