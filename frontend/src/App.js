@@ -14,12 +14,14 @@ const AppointmentBooking = () => {
     phoneNumber: "",
     email: "",
     websiteLink: "",
+    avgMonthlySales: "",
   });
   const [errors, setErrors] = useState({
     fullName: false,
     phoneNumber: false,
     email: false,
     websiteLink: false,
+    avgMonthlySales: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [bookedTimes, setBookedTimes] = useState([]);
@@ -32,13 +34,10 @@ const AppointmentBooking = () => {
     "12:00 PM",
     "1:00 PM",
     "2:00 PM",
+    "3:00 PM",
     "4:00 PM",
     "5:00 PM",
     "6:00 PM",
-    "7:00 PM",
-    "8:00 PM",
-    "9:00 PM",
-    "10:00 PM",
   ];
 
   const getDaysInMonth = (year, month) => {
@@ -119,10 +118,20 @@ const AppointmentBooking = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "fullName" ? value : value.trim(), // Allow spaces in fullName, trim others
-    }));
+
+    if (name === "avgMonthlySales") {
+      // Allow anything the user types (no filtering)
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: name === "fullName" ? value : value.trim(),
+      }));
+    }
+
     setErrors((prev) => ({
       ...prev,
       [name]: false,
@@ -139,6 +148,7 @@ const AppointmentBooking = () => {
       phoneNumber: !formData.phoneNumber || !phoneRegex.test(formData.phoneNumber),
       email: !formData.email || !emailRegex.test(formData.email),
       websiteLink: !formData.websiteLink || !urlRegex.test(formData.websiteLink),
+      avgMonthlySales: !formData.avgMonthlySales.trim(), // only check if empty
     };
     setErrors(newErrors);
 
@@ -157,6 +167,10 @@ const AppointmentBooking = () => {
         year: "numeric",
       });
       const submissionDate = new Date().toISOString();
+
+      // Clean avgMonthlySales: remove commas before sending (keep other characters if any)
+      const cleanedAvgMonthlySales = formData.avgMonthlySales.trim().replace(/,/g, '');
+
       console.log('Sending appointment data:', {
         date: appointmentDate,
         time: selectedTime,
@@ -164,10 +178,10 @@ const AppointmentBooking = () => {
         phoneNumber: formData.phoneNumber,
         email: formData.email,
         websiteLink: formData.websiteLink,
+        avgMonthlySales: cleanedAvgMonthlySales,
         submissionDate,
       });
 
-      // 1. ATTEMPT TO SAVE APPOINTMENT
       const appointmentResponse = await axios.post('https://muvance-crm.onrender.com/api/appointments', {
         date: new Date(currentYear, currentMonth, selectedDate).toISOString(),
         time: selectedTime,
@@ -175,6 +189,7 @@ const AppointmentBooking = () => {
         phoneNumber: formData.phoneNumber,
         email: formData.email,
         websiteLink: formData.websiteLink,
+        avgMonthlySales: cleanedAvgMonthlySales,
         submissionDate,
       });
       console.log('Booking Response:', appointmentResponse.data);
@@ -189,7 +204,6 @@ const AppointmentBooking = () => {
         throw new Error('SMS message too long');
       }
 
-      // 2. ATTEMPT TO SEND SMS
       console.log('SMS Request Params:', {
         api_key: process.env.REACT_APP_BULKSMSBD_API_KEY,
         senderid: process.env.REACT_APP_BULKSMSBD_SENDERID,
@@ -217,17 +231,13 @@ const AppointmentBooking = () => {
 
       setIsLoading(false);
       
-      // *** MODIFICATION START (SUCCESS REDIRECT) ***
       const thankYouUrl = "https://muvance.com/thankyou";
       
       if (window.top && window.top !== window.self) {
-        // We are in an iframe, redirect the parent window for conversion tracking
         window.top.location.href = thankYouUrl;
       } else {
-        // Not in an iframe, redirect the current window
         window.location.href = thankYouUrl;
       }
-      // *** MODIFICATION END ***
 
     } catch (error) {
       setIsLoading(false);
@@ -253,9 +263,6 @@ const AppointmentBooking = () => {
 
       setSmsStatus(`SMS failed: ${errorCode} - ${errorMessage}`);
       
-      // *** MODIFICATION START (FAILURE REDIRECT) ***
-      // We redirect here too. Even if the SMS failed, the appointment was likely saved 
-      // in the first step (axios.post('.../appointments')), so we want to count the conversion.
       const thankYouUrl = "https://muvance.com/thankyou";
       
       if (window.top && window.top !== window.self) {
@@ -263,7 +270,6 @@ const AppointmentBooking = () => {
       } else {
         window.location.href = thankYouUrl;
       }
-      // *** MODIFICATION END ***
     }
   };
 
@@ -295,8 +301,18 @@ const AppointmentBooking = () => {
     let [hours, minutes] = timePart.split(":").map(Number);
     if (period === "PM" && hours !== 12) hours += 12;
     if (period === "AM" && hours === 12) hours = 0;
-    const selectedDateTime = new Date(currentYear, currentMonth, selectedDate, hours, minutes, 0, 0);
-    return selectedDateTime < today;
+
+    const slotDateTime = new Date(currentYear, currentMonth, selectedDate, hours, minutes, 0, 0);
+
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const slotDayStart = new Date(currentYear, currentMonth, selectedDate);
+
+    if (slotDayStart < todayStart) return true;
+    if (slotDayStart > todayStart) return false;
+
+    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+    return slotDateTime <= oneHourFromNow;
   };
 
   const isTimeSlotBooked = (time) => {
@@ -523,7 +539,6 @@ const AppointmentBooking = () => {
                         onChange={handleInputChange}
                         className={`mt-1 w-full border rounded-lg py-2 px-3 text-gray-900 focus:ring-indigo-500 focus:border-indigo-500 ${errors.phoneNumber ? "error-shake border-red-500" : "border-[#d1a8a8]"}`}
                         required
-                        placeholder="01712345678"
                       />
                       {errors.phoneNumber && (
                         <p className="text-red-500 text-sm mt-1">Please enter a valid 11-digit phone number starting with 01 (e.g., 01712345678)</p>
@@ -557,6 +572,23 @@ const AppointmentBooking = () => {
                       {errors.websiteLink && (
                         <p className="text-red-500 text-sm mt-1">
                           Please enter a valid website URL (e.g. yourstore.com)
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 text-left">
+                        Average Monthly Sales in Taka <span className="text-red-600">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="avgMonthlySales"
+                        value={formData.avgMonthlySales}
+                        onChange={handleInputChange}
+                        className={`mt-1 w-full border rounded-lg py-2 px-3 text-gray-900 focus:ring-indigo-500 focus:border-indigo-500 ${errors.avgMonthlySales ? "error-shake border-red-500" : "border-[#d1a8a8]"}`}
+                      />
+                      {errors.avgMonthlySales && (
+                        <p className="text-red-500 text-sm mt-1">
+                          This field is required
                         </p>
                       )}
                     </div>
@@ -642,12 +674,12 @@ const AppointmentBooking = () => {
                     </div>
                     <div className="flex items-center text-gray-700 mt-4 mb-2">
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       <h3 className="text-md font-medium">Where</h3>
                     </div>
                     <div className="ml-7 text-gray-600">
-                      <p>We’ll give you a quick reminder call just before the meeting and then join you on Google Meet. The meeting link will be shared with you beforehand.</p>
+                      <p>We'll give you a quick reminder call just before the meeting and then join you on Google Meet. The meeting link will be shared with you beforehand.</p>
                     </div>
                   </div>
                 </div>

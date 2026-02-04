@@ -88,6 +88,22 @@ const AddLeadModal = ({
               className="new-lead-input"
             />
           </label>
+
+          {/* ────────────────────────────────────────────────
+              Added: Average Monthly Sales field
+          ──────────────────────────────────────────────── */}
+          <label>
+            Average Monthly Sales (৳):
+            <input
+              type="text"
+              name="avgMonthlySales"
+              value={newLead.avgMonthlySales || ''}
+              onChange={handleNewLeadChange}
+              placeholder="e.g. 250000 or 250,000"
+              className="new-lead-input"
+            />
+          </label>
+
           <label>
             Select Date:
             <DatePicker

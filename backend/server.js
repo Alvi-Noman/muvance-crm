@@ -28,6 +28,7 @@ const appointmentSchema = new mongoose.Schema({
   phoneNumber: { type: String, required: true },
   email: { type: String },
   websiteLink: { type: String },
+  avgMonthlySales: { type: String },
   submissionDate: { type: String, required: true },
   status: { type: String, default: 'New' },
   activity: [{
@@ -201,7 +202,7 @@ app.post('/api/appointments', [
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { date, time, fullName, phoneNumber, email, websiteLink, submissionDate, status, activity } = req.body;
+  const { date, time, fullName, phoneNumber, email, websiteLink, avgMonthlySales, submissionDate, status, activity } = req.body;
 
   try {
     const newAppointment = new Appointment({
@@ -211,6 +212,7 @@ app.post('/api/appointments', [
       phoneNumber,
       email,
       websiteLink,
+      avgMonthlySales,
       submissionDate,
       status: status || 'New',
       activity: activity || [{
